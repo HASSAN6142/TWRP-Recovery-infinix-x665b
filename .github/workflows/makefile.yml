@@ -16,14 +16,13 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3 git-lfs
 
       - name: Setup Repo
         run: |
           mkdir -p ~/bin
-          curl https://googleapis.com > ~/bin/repo
+          curl -L "https://googleapis.com" -o ~/bin/repo
           chmod a+x ~/bin/repo
-          export PATH=~/bin:$PATH
           git config --global user.name "HASSAN6142"
           git config --global user.email "hassan@example.com"
 
@@ -31,12 +30,12 @@ jobs:
         run: |
           export PATH=~/bin:$PATH
           mkdir -p ~/twrp && cd ~/twrp
-          repo init --depth=1 -u https://github.com -b twrp-12.1
+          repo init --depth=1 -u "https://github.com" -b twrp-12.1
           repo sync -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 
       - name: Clone Device Tree
         run: |
-          git clone https://github.com ~/twrp/device/infinix/x665b
+          git clone "https://github.com" ~/twrp/device/infinix/x665b
 
       - name: Build Recovery
         run: |
