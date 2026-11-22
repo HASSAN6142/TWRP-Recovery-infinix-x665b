@@ -1,0 +1,55 @@
+name: Build TWRP Recovery
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Maximize Build Space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/lib/android
+          sudo apt-get clean
+          df -h
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python3
+
+      - name: Setup Repo
+        run: |
+          mkdir -p ~/bin
+          curl https://googleapis.com > ~/bin/repo
+          chmod a+x ~/bin/repo
+          export PATH=~/bin:$PATH
+          git config --global user.name "HASSAN6142"
+          git config --global user.email "hassan@example.com"
+
+      - name: Sync TWRP Source
+        run: |
+          export PATH=~/bin:$PATH
+          mkdir -p ~/twrp && cd ~/twrp
+          repo init --depth=1 -u https://github.com -b twrp-12.1
+          repo sync -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+      - name: Clone Device Tree
+        run: |
+          git clone https://github.com ~/twrp/device/infinix/x665b
+
+      - name: Build Recovery
+        run: |
+          cd ~/twrp
+          source build/envsetup.sh
+          export ALLOW_MISSING_DEPENDENCIES=true
+          PRODUCT_NAME=$(grep -m 1 "PRODUCT_NAME :=" device/infinix/x665b/*.mk | awk -F':=' '{print $2}' | tr -d ' ')
+          echo "Detected Product: $PRODUCT_NAME"
+          lunch ${PRODUCT_NAME}-eng
+          mka recoveryimage
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TWRP-x665b
+          path: ~/twrp/out/target/product/x665b/*.img
